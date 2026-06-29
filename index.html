@@ -282,10 +282,6 @@
 
     <!-- Zone 2: content -->
     <section class="content" id="content">
-      <div class="state" id="loadingState">
-        <div class="spinner" aria-hidden="true"></div>
-        <p>Loading folders…</p>
-      </div>
       <div class="folder-list" id="folderList" hidden></div>
     </section>
 
@@ -317,7 +313,6 @@
   // ----- Elements -----
   const els = {
     content: document.getElementById("content"),
-    loading: document.getElementById("loadingState"),
     list: document.getElementById("folderList"),
     status: document.getElementById("status"),
     btn: document.getElementById("downloadBtn"),
@@ -344,7 +339,6 @@
 
   function showState(html, isError) {
     els.list.hidden = true;
-    els.loading.hidden = true;
     let existing = document.getElementById("messageState");
     if (existing) existing.remove();
     const div = document.createElement("div");
@@ -378,8 +372,6 @@
         .map(it => it.name)
         .sort((a, b) => a.localeCompare(b));
 
-      els.loading.hidden = true;
-
       if (folders.length === 0) {
         showState(icon("empty") + "<p>No folders found in this repository yet.</p>", false);
         return;
@@ -388,7 +380,6 @@
       renderFolders(folders);
       setStatus("Select a folder to get started.");
     } catch (err) {
-      els.loading.hidden = true;
       showState(icon("error") + "<p>Something went wrong loading the folders. Check your connection and refresh.</p>", true);
     }
   }

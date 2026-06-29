@@ -305,6 +305,12 @@
   const SOURCE_OWNER = "aadsit7";
   const SOURCE_REPO  = "Chrome-EXT-format";
 
+  // ----- Download protection -----
+  // Every folder downloads only after entering DOWNLOAD_PASSWORD, EXCEPT the
+  // one named in FREE_FOLDER, which downloads with no password.
+  const FREE_FOLDER       = "randy-recast-se-assistant";
+  const DOWNLOAD_PASSWORD = "2026";
+
   // ----- State -----
   let defaultBranch = null;
   let selectedFolder = null;
@@ -415,6 +421,14 @@
   async function downloadFolder() {
     if (!selectedFolder || isWorking) return;
     const folder = selectedFolder;
+
+    // Password gate: required for every folder except the free one.
+    if (folder !== FREE_FOLDER) {
+      const entered = prompt('"' + folder + '" is password-protected. Enter the password to download it:');
+      if (entered === null) { setStatus("Download cancelled."); return; }
+      if (entered !== DOWNLOAD_PASSWORD) { setStatus("Incorrect password — download cancelled.", "error"); return; }
+    }
+
     setWorking(true, "Finding files…");
 
     try {

@@ -1,1 +1,310 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>GitHub Folder Downloader</title>
+<style>
+  :root {
+    --bg: #f6f8fa;
+    --card: #ffffff;
+    --border: #d0d7de;
+    --text: #1f2328;
+    --muted: #57606a;
+    --accent: #1f6feb;
+    --accent-hover: #1a5fd0;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.5;
+    padding: 24px;
+  }
+  .wrap {
+    max-width: 640px;
+    margin: 0 auto;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+  }
+  h1 {
+    margin: 0 0 6px;
+    font-size: 22px;
+  }
+  .instruction {
+    margin: 0 0 20px;
+    color: var(--muted);
+    font-size: 14px;
+  }
+  #folders {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin: 0 0 20px;
+  }
+  label.folder {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 14px;
+    cursor: pointer;
+    transition: border-color .15s, background .15s;
+    font-size: 15px;
+  }
+  label.folder:hover { border-color: var(--accent); }
+  label.folder input { margin: 0; cursor: pointer; }
+  label.folder.selected {
+    border-color: var(--accent);
+    background: #f0f6ff;
+  }
+  .folder-icon { color: var(--muted); }
+  button {
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 8px;
+    padding: 11px 20px;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background .15s;
+  }
+  button:hover:not(:disabled) { background: var(--accent-hover); }
+  button:disabled {
+    opacity: .55;
+    cursor: not-allowed;
+  }
+  #status {
+    margin-top: 18px;
+    font-size: 14px;
+    color: var(--muted);
+    min-height: 20px;
+  }
+  #status.error { color: #cf222e; }
+  #status.done { color: #1a7f37; }
+  .src {
+    margin-top: 22px;
+    padding-top: 14px;
+    border-top: 1px solid var(--border);
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .src code {
+    background: var(--bg);
+    padding: 1px 5px;
+    border-radius: 4px;
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>GitHub Folder Downloader</h1>
+    <p class="instruction">Pick a folder below and click <strong>Download ZIP</strong> to download just that folder, with its structure intact — all in your browser, no login needed.</p>
 
+    <div id="folders"><em>Loading folders…</em></div>
+
+    <button id="downloadBtn" disabled>Download ZIP</button>
+
+    <div id="status"></div>
+
+    <div class="src">
+      Reading from <code id="srcLabel"></code>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script>
+  // ===================================================================
+  //  SOURCE REPOSITORY — change these two constants to repoint the page
+  //  at a different public GitHub repo.
+  // ===================================================================
+  const SOURCE_OWNER = "aadsit7";
+  const SOURCE_REPO  = "Chrome-EXT-format";
+  // ===================================================================
+
+  const foldersEl   = document.getElementById("folders");
+  const downloadBtn = document.getElementById("downloadBtn");
+  const statusEl    = document.getElementById("status");
+  document.getElementById("srcLabel").textContent = SOURCE_OWNER + "/" + SOURCE_REPO;
+
+  let defaultBranch  = null;   // discovered from the API
+  let selectedFolder = null;   // folder name chosen on the form
+
+  function setStatus(msg, kind) {
+    statusEl.textContent = msg;
+    statusEl.className = kind || "";
+  }
+
+  // Detect a GitHub rate-limit response and explain it plainly.
+  function rateLimitMessage(response, bodyText) {
+    const remaining = response.headers.get("X-RateLimit-Remaining");
+    const looksRateLimited =
+      response.status === 403 &&
+      ((remaining !== null && remaining === "0") ||
+       /rate limit/i.test(bodyText || ""));
+    if (looksRateLimited) {
+      return "GitHub is asking us to wait a bit. Anonymous use is limited to about " +
+             "60 requests per hour. Please try again shortly. " +
+             "(File downloads themselves go through raw.githubusercontent.com and do NOT " +
+             "count against this limit, so normal use stays well within it.)";
+    }
+    return null;
+  }
+
+  // Step 1: detect the source repo's default branch, then list folders.
+  async function init() {
+    try {
+      setStatus("Loading folders…");
+      const repoResp = await fetch(
+        "https://api.github.com/repos/" + SOURCE_OWNER + "/" + SOURCE_REPO
+      );
+      if (!repoResp.ok) {
+        const text = await repoResp.text();
+        const rl = rateLimitMessage(repoResp, text);
+        throw new Error(rl || ("Could not read the repository (HTTP " + repoResp.status + ")."));
+      }
+      const repoData = await repoResp.json();
+      defaultBranch = repoData.default_branch;
+
+      await listFolders();
+    } catch (err) {
+      foldersEl.innerHTML = "";
+      setStatus(err.message || String(err), "error");
+    }
+  }
+
+  // Step 2: list top-level folders from the contents API.
+  async function listFolders() {
+    const url = "https://api.github.com/repos/" + SOURCE_OWNER + "/" + SOURCE_REPO +
+                "/contents/?ref=" + encodeURIComponent(defaultBranch);
+    const resp = await fetch(url);
+    if (!resp.ok) {
+      const text = await resp.text();
+      const rl = rateLimitMessage(resp, text);
+      throw new Error(rl || ("Could not list folders (HTTP " + resp.status + ")."));
+    }
+    const items = await resp.json();
+
+    // Keep only directories, skip dot-folders.
+    const dirs = items
+      .filter(it => it.type === "dir" && !it.name.startsWith("."))
+      .map(it => it.name)
+      .sort((a, b) => a.localeCompare(b));
+
+    if (dirs.length === 0) {
+      foldersEl.innerHTML = "";
+      setStatus("No folders found in this repository.", "error");
+      return;
+    }
+
+    foldersEl.innerHTML = "";
+    dirs.forEach(name => {
+      const label = document.createElement("label");
+      label.className = "folder";
+
+      const radio = document.createElement("input");
+      radio.type = "radio";
+      radio.name = "folder";
+      radio.value = name;
+      radio.addEventListener("change", () => {
+        selectedFolder = name;
+        downloadBtn.disabled = false;
+        document.querySelectorAll("label.folder").forEach(l => l.classList.remove("selected"));
+        label.classList.add("selected");
+        setStatus("");
+      });
+
+      const icon = document.createElement("span");
+      icon.className = "folder-icon";
+      icon.textContent = "📁";
+
+      const text = document.createElement("span");
+      text.textContent = name;
+
+      label.appendChild(radio);
+      label.appendChild(icon);
+      label.appendChild(text);
+      foldersEl.appendChild(label);
+    });
+
+    setStatus("Select a folder, then click Download ZIP.");
+  }
+
+  // Step 3: build and download the ZIP for the chosen folder.
+  async function downloadFolder() {
+    if (!selectedFolder || !defaultBranch) return;
+    const folder = selectedFolder;
+    downloadBtn.disabled = true;
+
+    try {
+      // Get the full file list in one Git Trees call.
+      const treeUrl = "https://api.github.com/repos/" + SOURCE_OWNER + "/" + SOURCE_REPO +
+                      "/git/trees/" + encodeURIComponent(defaultBranch) + "?recursive=1";
+      const treeResp = await fetch(treeUrl);
+      if (!treeResp.ok) {
+        const text = await treeResp.text();
+        const rl = rateLimitMessage(treeResp, text);
+        throw new Error(rl || ("Could not read the file list (HTTP " + treeResp.status + ")."));
+      }
+      const treeData = await treeResp.json();
+
+      const prefix = folder + "/";
+      const files = (treeData.tree || []).filter(
+        node => node.type === "blob" && node.path.startsWith(prefix)
+      );
+
+      if (files.length === 0) {
+        throw new Error("That folder appears to be empty.");
+      }
+
+      setStatus("Found " + files.length + " files, downloading…");
+
+      const zip = new JSZip();
+
+      // Fetch each file as binary so images (PNG/JPG/ICO) stay intact.
+      for (let i = 0; i < files.length; i++) {
+        const path = files[i].path;
+        const rawUrl = "https://raw.githubusercontent.com/" + SOURCE_OWNER + "/" +
+                       SOURCE_REPO + "/" + encodeURIComponent(defaultBranch) + "/" +
+                       path.split("/").map(encodeURIComponent).join("/");
+        const fileResp = await fetch(rawUrl);
+        if (!fileResp.ok) {
+          throw new Error("Could not download " + path + " (HTTP " + fileResp.status + ").");
+        }
+        const buf = await fileResp.arrayBuffer();
+        // Path relative to the chosen folder so the ZIP opens to its contents.
+        const relativePath = path.slice(prefix.length);
+        zip.file(relativePath, buf);
+        setStatus("Found " + files.length + " files, downloading… (" + (i + 1) + "/" + files.length + ")");
+      }
+
+      setStatus("Building ZIP…");
+      const blob = await zip.generateAsync({ type: "blob" });
+
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(blob);
+      link.download = folder + ".zip";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(link.href);
+
+      setStatus("Done — your download should start.", "done");
+    } catch (err) {
+      setStatus(err.message || String(err), "error");
+    } finally {
+      downloadBtn.disabled = false;
+    }
+  }
+
+  downloadBtn.addEventListener("click", downloadFolder);
+  init();
+  </script>
+</body>
+</html>

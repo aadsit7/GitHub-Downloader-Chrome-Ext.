@@ -3,308 +3,495 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>GitHub Folder Downloader</title>
+<title>Extension downloader</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&display=swap" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <style>
   :root {
-    --bg: #f6f8fa;
-    --card: #ffffff;
-    --border: #d0d7de;
-    --text: #1f2328;
-    --muted: #57606a;
-    --accent: #1f6feb;
-    --accent-hover: #1a5fd0;
+    /* Accents */
+    --accent-blue: #0372FF;
+    --accent-cyan: #31D1FF;
+    --accent-gradient: linear-gradient(140deg, #0372FF 0%, #31D1FF 100%);
+
+    /* Text */
+    --text-heading: #161F5B;
+    --text-body: #4D5878;
+    --text-muted: #97A2BB;
+
+    /* Glass */
+    --glass-surface: rgba(255, 255, 255, 0.62);
+    --glass-border: rgba(255, 255, 255, 0.78);
+    --glass-tint: rgba(3, 114, 255, 0.06);
+
+    /* Depth */
+    --shadow-soft: 0 8px 28px rgba(30, 40, 90, 0.13);
+    --shadow-lift: 0 14px 40px rgba(30, 40, 90, 0.18);
+
+    /* Shape */
+    --r-card: 24px;
+    --r-tile: 16px;
+    --r-avatar: 15px;
+    --r-pill: 999px;
   }
+
   * { box-sizing: border-box; }
+
+  html, body { height: 100%; }
+
   body {
     margin: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
-    background: var(--bg);
-    color: var(--text);
-    line-height: 1.5;
-    padding: 24px;
-  }
-  .wrap {
-    max-width: 640px;
-    margin: 0 auto;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    padding: 28px;
-  }
-  h1 {
-    margin: 0 0 6px;
-    font-size: 22px;
-  }
-  .instruction {
-    margin: 0 0 20px;
-    color: var(--muted);
-    font-size: 14px;
-  }
-  #folders {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin: 0 0 20px;
-  }
-  label.folder {
+    font-family: "DM Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+    color: var(--text-body);
+    /* Soft light blue -> lavender wash with faint corner tints */
+    background:
+      radial-gradient(60% 50% at 12% 8%, rgba(49, 209, 255, 0.20) 0%, rgba(49, 209, 255, 0) 60%),
+      radial-gradient(55% 45% at 92% 10%, rgba(3, 114, 255, 0.16) 0%, rgba(3, 114, 255, 0) 62%),
+      radial-gradient(65% 55% at 88% 96%, rgba(168, 140, 255, 0.22) 0%, rgba(168, 140, 255, 0) 60%),
+      radial-gradient(60% 50% at 6% 92%, rgba(120, 200, 255, 0.18) 0%, rgba(120, 200, 255, 0) 60%),
+      linear-gradient(160deg, #EAF2FF 0%, #EFEBFF 100%);
+    background-attachment: fixed;
+    min-height: 100%;
     display: flex;
     align-items: center;
+    justify-content: center;
+    padding: 28px 18px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ---------- Card shell: header / content / action ---------- */
+  .app {
+    width: 100%;
+    max-width: 480px;
+    background: var(--glass-surface);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--r-card);
+    box-shadow: var(--shadow-soft);
+    backdrop-filter: blur(22px) saturate(1.4);
+    -webkit-backdrop-filter: blur(22px) saturate(1.4);
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* ---------- Zone 1: header (identity) ---------- */
+  .header {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 26px 26px 18px;
+  }
+  .avatar {
+    width: 50px;
+    height: 50px;
+    flex: none;
+    border-radius: var(--r-avatar);
+    background: var(--accent-gradient);
+    display: grid;
+    place-items: center;
+    box-shadow: 0 6px 16px rgba(3, 114, 255, 0.34);
+  }
+  .avatar svg { width: 26px; height: 26px; color: #fff; }
+  .identity h1 {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--text-heading);
+  }
+  .identity .repo {
+    margin: 3px 0 0;
+    font-size: 13px;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+
+  .intro {
+    padding: 0 26px 14px;
+    font-size: 14.5px;
+    line-height: 1.5;
+    color: var(--text-body);
+  }
+
+  /* ---------- Zone 2: content (folder list) ---------- */
+  .content {
+    padding: 4px 18px 8px;
+    max-height: 46vh;
+    overflow-y: auto;
+  }
+
+  .folder-list { display: flex; flex-direction: column; gap: 10px; }
+
+  .folder-card {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    width: 100%;
+    text-align: left;
+    padding: 13px 14px;
+    border-radius: var(--r-tile);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    background: rgba(255, 255, 255, 0.5);
+    cursor: pointer;
+    font-family: inherit;
+    transition: background 0.18s ease, border-color 0.18s ease, transform 0.12s ease, box-shadow 0.18s ease;
+  }
+  .folder-card:hover { background: rgba(255, 255, 255, 0.72); transform: translateY(-1px); }
+  .folder-card:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 2px; }
+
+  .folder-card.is-selected {
+    border-color: var(--accent-blue);
+    background: var(--glass-tint);
+    box-shadow: 0 6px 18px rgba(3, 114, 255, 0.18);
+  }
+
+  .folder-ico {
+    width: 38px; height: 38px; flex: none;
+    border-radius: 12px;
+    display: grid; place-items: center;
+    background: rgba(3, 114, 255, 0.10);
+    color: var(--accent-blue);
+  }
+  .folder-ico svg { width: 20px; height: 20px; }
+  .folder-card.is-selected .folder-ico { background: var(--accent-gradient); color: #fff; }
+
+  .folder-name {
+    flex: 1;
+    min-width: 0;
+    font-size: 15px;
+    font-weight: 500;
+    color: var(--text-heading);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+
+  .radio {
+    width: 22px; height: 22px; flex: none;
+    border-radius: 999px;
+    border: 2px solid var(--text-muted);
+    display: grid; place-items: center;
+    transition: border-color 0.18s ease, background 0.18s ease;
+  }
+  .radio svg { width: 13px; height: 13px; color: #fff; opacity: 0; transform: scale(0.6); transition: opacity 0.16s ease, transform 0.16s ease; }
+  .folder-card.is-selected .radio { border-color: transparent; background: var(--accent-gradient); }
+  .folder-card.is-selected .radio svg { opacity: 1; transform: scale(1); }
+
+  /* States: loading / empty / error */
+  .state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
     gap: 10px;
-    border: 1px solid var(--border);
-    border-radius: 8px;
-    padding: 12px 14px;
-    cursor: pointer;
-    transition: border-color .15s, background .15s;
-    font-size: 15px;
+    padding: 34px 22px;
+    color: var(--text-muted);
   }
-  label.folder:hover { border-color: var(--accent); }
-  label.folder input { margin: 0; cursor: pointer; }
-  label.folder.selected {
-    border-color: var(--accent);
-    background: #f0f6ff;
+  .state .state-ico {
+    width: 46px; height: 46px;
+    border-radius: 14px;
+    display: grid; place-items: center;
+    background: rgba(255, 255, 255, 0.6);
+    color: var(--accent-blue);
   }
-  .folder-icon { color: var(--muted); }
-  button {
-    background: var(--accent);
-    color: #fff;
+  .state .state-ico svg { width: 24px; height: 24px; }
+  .state p { margin: 0; font-size: 14px; line-height: 1.5; max-width: 30ch; }
+  .state.is-error .state-ico { color: #e0556b; background: rgba(224, 85, 107, 0.12); }
+  .state.is-error p { color: var(--text-body); }
+
+  .spinner {
+    width: 26px; height: 26px;
+    border: 3px solid rgba(3, 114, 255, 0.2);
+    border-top-color: var(--accent-blue);
+    border-radius: 999px;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ---------- Zone 3: action area ---------- */
+  .action {
+    padding: 16px 22px 22px;
+    border-top: 1px solid rgba(255, 255, 255, 0.6);
+    background: rgba(255, 255, 255, 0.28);
+  }
+  .status {
+    min-height: 18px;
+    margin: 0 0 12px;
+    text-align: center;
+    font-size: 13px;
+    color: var(--text-muted);
+    font-weight: 500;
+  }
+  .status.is-success { color: var(--accent-blue); }
+  .status.is-error { color: #e0556b; }
+
+  .btn-primary {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    padding: 15px 22px;
     border: none;
-    border-radius: 8px;
-    padding: 11px 20px;
-    font-size: 15px;
-    font-weight: 600;
+    border-radius: var(--r-pill);
+    background: var(--accent-gradient);
+    color: #fff;
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 700;
     cursor: pointer;
-    transition: background .15s;
+    box-shadow: 0 10px 24px rgba(3, 114, 255, 0.34);
+    transition: transform 0.12s ease, box-shadow 0.18s ease, opacity 0.18s ease;
   }
-  button:hover:not(:disabled) { background: var(--accent-hover); }
-  button:disabled {
-    opacity: .55;
-    cursor: not-allowed;
+  .btn-primary svg { width: 19px; height: 19px; }
+  .btn-primary:hover:not(:disabled) { transform: translateY(-1px); box-shadow: var(--shadow-lift); }
+  .btn-primary:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 3px; }
+  .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
+  .btn-primary.is-working { opacity: 1; cursor: progress; }
+
+  .btn-spin {
+    width: 17px; height: 17px;
+    border: 2.5px solid rgba(255, 255, 255, 0.45);
+    border-top-color: #fff;
+    border-radius: 999px;
+    animation: spin 0.8s linear infinite;
   }
-  #status {
-    margin-top: 18px;
-    font-size: 14px;
-    color: var(--muted);
-    min-height: 20px;
-  }
-  #status.error { color: #cf222e; }
-  #status.done { color: #1a7f37; }
-  .src {
-    margin-top: 22px;
-    padding-top: 14px;
-    border-top: 1px solid var(--border);
-    font-size: 12px;
-    color: var(--muted);
-  }
-  .src code {
-    background: var(--bg);
-    padding: 1px 5px;
-    border-radius: 4px;
+
+  @media (prefers-reduced-motion: reduce) {
+    * { animation: none !important; transition: none !important; }
   }
 </style>
 </head>
 <body>
-  <div class="wrap">
-    <h1>GitHub Folder Downloader</h1>
-    <p class="instruction">Pick a folder below and click <strong>Download ZIP</strong> to download just that folder, with its structure intact — all in your browser, no login needed.</p>
+  <main class="app">
+    <!-- Zone 1: identity -->
+    <header class="header">
+      <div class="avatar" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>
+          <polyline points="3.27 6.96 12 12.01 20.73 6.96"/>
+          <line x1="12" y1="22.08" x2="12" y2="12"/>
+        </svg>
+      </div>
+      <div class="identity">
+        <h1>Extension downloader</h1>
+        <p class="repo">aadsit7 / Chrome-EXT-format</p>
+      </div>
+    </header>
 
-    <div id="folders"><em>Loading folders…</em></div>
+    <p class="intro">Pick an extension folder below and download it as a ZIP — built right here in your browser.</p>
 
-    <button id="downloadBtn" disabled>Download ZIP</button>
+    <!-- Zone 2: content -->
+    <section class="content" id="content">
+      <div class="state" id="loadingState">
+        <div class="spinner" aria-hidden="true"></div>
+        <p>Loading folders…</p>
+      </div>
+      <div class="folder-list" id="folderList" hidden></div>
+    </section>
 
-    <div id="status"></div>
+    <!-- Zone 3: action -->
+    <footer class="action">
+      <p class="status" id="status">Select a folder to get started.</p>
+      <button class="btn-primary" id="downloadBtn" disabled>
+        <span id="btnSpinner" hidden><span class="btn-spin" aria-hidden="true"></span></span>
+        <svg id="btnIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+          <polyline points="7 10 12 15 17 10"/>
+          <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+        <span id="btnLabel">Download ZIP</span>
+      </button>
+    </footer>
+  </main>
 
-    <div class="src">
-      Reading from <code id="srcLabel"></code>
-    </div>
-  </div>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-  <script>
-  // ===================================================================
-  //  SOURCE REPOSITORY — change these two constants to repoint the page
-  //  at a different public GitHub repo.
-  // ===================================================================
+<script>
+  // ----- Source repository (change these two to reuse this page elsewhere) -----
   const SOURCE_OWNER = "aadsit7";
   const SOURCE_REPO  = "Chrome-EXT-format";
-  // ===================================================================
 
-  const foldersEl   = document.getElementById("folders");
-  const downloadBtn = document.getElementById("downloadBtn");
-  const statusEl    = document.getElementById("status");
-  document.getElementById("srcLabel").textContent = SOURCE_OWNER + "/" + SOURCE_REPO;
+  // ----- State -----
+  let defaultBranch = null;
+  let selectedFolder = null;
+  let isWorking = false;
 
-  let defaultBranch  = null;   // discovered from the API
-  let selectedFolder = null;   // folder name chosen on the form
+  // ----- Elements -----
+  const els = {
+    content: document.getElementById("content"),
+    loading: document.getElementById("loadingState"),
+    list: document.getElementById("folderList"),
+    status: document.getElementById("status"),
+    btn: document.getElementById("downloadBtn"),
+    btnLabel: document.getElementById("btnLabel"),
+    btnIcon: document.getElementById("btnIcon"),
+    btnSpinner: document.getElementById("btnSpinner"),
+  };
 
-  function setStatus(msg, kind) {
-    statusEl.textContent = msg;
-    statusEl.className = kind || "";
+  const api = `https://api.github.com/repos/${SOURCE_OWNER}/${SOURCE_REPO}`;
+
+  // ----- Helpers -----
+  function setStatus(text, kind) {
+    els.status.textContent = text;
+    els.status.className = "status" + (kind ? " is-" + kind : "");
   }
 
-  // Detect a GitHub rate-limit response and explain it plainly.
-  function rateLimitMessage(response, bodyText) {
-    const remaining = response.headers.get("X-RateLimit-Remaining");
-    const looksRateLimited =
-      response.status === 403 &&
-      ((remaining !== null && remaining === "0") ||
-       /rate limit/i.test(bodyText || ""));
-    if (looksRateLimited) {
-      return "GitHub is asking us to wait a bit. Anonymous use is limited to about " +
-             "60 requests per hour. Please try again shortly. " +
-             "(File downloads themselves go through raw.githubusercontent.com and do NOT " +
-             "count against this limit, so normal use stays well within it.)";
-    }
-    return null;
+  function isRateLimited(resp) {
+    return resp.status === 403 && resp.headers.get("x-ratelimit-remaining") === "0";
   }
 
-  // Step 1: detect the source repo's default branch, then list folders.
+  function rateLimitMessage() {
+    return "GitHub is asking us to wait a moment (anonymous use is capped at about 60 checks per hour). Try again shortly.";
+  }
+
+  function showState(html, isError) {
+    els.list.hidden = true;
+    els.loading.hidden = true;
+    let existing = document.getElementById("messageState");
+    if (existing) existing.remove();
+    const div = document.createElement("div");
+    div.className = "state" + (isError ? " is-error" : "");
+    div.id = "messageState";
+    div.innerHTML = html;
+    els.content.appendChild(div);
+  }
+
+  function icon(kind) {
+    if (kind === "empty") return '<div class="state-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></div>';
+    return '<div class="state-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg></div>';
+  }
+
+  // ----- Load: default branch, then folders -----
   async function init() {
     try {
-      setStatus("Loading folders…");
-      const repoResp = await fetch(
-        "https://api.github.com/repos/" + SOURCE_OWNER + "/" + SOURCE_REPO
-      );
-      if (!repoResp.ok) {
-        const text = await repoResp.text();
-        const rl = rateLimitMessage(repoResp, text);
-        throw new Error(rl || ("Could not read the repository (HTTP " + repoResp.status + ")."));
+      const repoResp = await fetch(api, { headers: { Accept: "application/vnd.github+json" } });
+      if (isRateLimited(repoResp)) { showState(icon("error") + "<p>" + rateLimitMessage() + "</p>", true); return; }
+      if (!repoResp.ok) { showState(icon("error") + "<p>Couldn't reach the repository. Check that " + SOURCE_OWNER + "/" + SOURCE_REPO + " exists and is public.</p>", true); return; }
+      const repo = await repoResp.json();
+      defaultBranch = repo.default_branch;
+
+      const treeResp = await fetch(`${api}/contents/?ref=${encodeURIComponent(defaultBranch)}`, { headers: { Accept: "application/vnd.github+json" } });
+      if (isRateLimited(treeResp)) { showState(icon("error") + "<p>" + rateLimitMessage() + "</p>", true); return; }
+      if (!treeResp.ok) { showState(icon("error") + "<p>Couldn't read the repository contents. Try again in a moment.</p>", true); return; }
+      const items = await treeResp.json();
+
+      const folders = items
+        .filter(it => it.type === "dir" && !it.name.startsWith("."))
+        .map(it => it.name)
+        .sort((a, b) => a.localeCompare(b));
+
+      els.loading.hidden = true;
+
+      if (folders.length === 0) {
+        showState(icon("empty") + "<p>No folders found in this repository yet.</p>", false);
+        return;
       }
-      const repoData = await repoResp.json();
-      defaultBranch = repoData.default_branch;
 
-      await listFolders();
+      renderFolders(folders);
+      setStatus("Select a folder to get started.");
     } catch (err) {
-      foldersEl.innerHTML = "";
-      setStatus(err.message || String(err), "error");
+      els.loading.hidden = true;
+      showState(icon("error") + "<p>Something went wrong loading the folders. Check your connection and refresh.</p>", true);
     }
   }
 
-  // Step 2: list top-level folders from the contents API.
-  async function listFolders() {
-    const url = "https://api.github.com/repos/" + SOURCE_OWNER + "/" + SOURCE_REPO +
-                "/contents/?ref=" + encodeURIComponent(defaultBranch);
-    const resp = await fetch(url);
-    if (!resp.ok) {
-      const text = await resp.text();
-      const rl = rateLimitMessage(resp, text);
-      throw new Error(rl || ("Could not list folders (HTTP " + resp.status + ")."));
-    }
-    const items = await resp.json();
-
-    // Keep only directories, skip dot-folders.
-    const dirs = items
-      .filter(it => it.type === "dir" && !it.name.startsWith("."))
-      .map(it => it.name)
-      .sort((a, b) => a.localeCompare(b));
-
-    if (dirs.length === 0) {
-      foldersEl.innerHTML = "";
-      setStatus("No folders found in this repository.", "error");
-      return;
-    }
-
-    foldersEl.innerHTML = "";
-    dirs.forEach(name => {
-      const label = document.createElement("label");
-      label.className = "folder";
-
-      const radio = document.createElement("input");
-      radio.type = "radio";
-      radio.name = "folder";
-      radio.value = name;
-      radio.addEventListener("change", () => {
-        selectedFolder = name;
-        downloadBtn.disabled = false;
-        document.querySelectorAll("label.folder").forEach(l => l.classList.remove("selected"));
-        label.classList.add("selected");
-        setStatus("");
-      });
-
-      const icon = document.createElement("span");
-      icon.className = "folder-icon";
-      icon.textContent = "📁";
-
-      const text = document.createElement("span");
-      text.textContent = name;
-
-      label.appendChild(radio);
-      label.appendChild(icon);
-      label.appendChild(text);
-      foldersEl.appendChild(label);
+  function renderFolders(folders) {
+    els.list.innerHTML = "";
+    folders.forEach(name => {
+      const card = document.createElement("button");
+      card.type = "button";
+      card.className = "folder-card";
+      card.dataset.folder = name;
+      card.innerHTML =
+        '<span class="folder-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></span>' +
+        '<span class="folder-name"></span>' +
+        '<span class="radio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>';
+      card.querySelector(".folder-name").textContent = name;
+      card.addEventListener("click", () => selectFolder(name, card));
+      els.list.appendChild(card);
     });
-
-    setStatus("Select a folder, then click Download ZIP.");
+    els.list.hidden = false;
   }
 
-  // Step 3: build and download the ZIP for the chosen folder.
+  function selectFolder(name, card) {
+    if (isWorking) return;
+    selectedFolder = name;
+    document.querySelectorAll(".folder-card").forEach(c => c.classList.remove("is-selected"));
+    card.classList.add("is-selected");
+    els.btn.disabled = false;
+    setStatus("Ready to download " + name + ".");
+  }
+
+  // ----- Download chosen folder as a ZIP -----
   async function downloadFolder() {
-    if (!selectedFolder || !defaultBranch) return;
+    if (!selectedFolder || isWorking) return;
     const folder = selectedFolder;
-    downloadBtn.disabled = true;
+    setWorking(true, "Finding files…");
 
     try {
-      // Get the full file list in one Git Trees call.
-      const treeUrl = "https://api.github.com/repos/" + SOURCE_OWNER + "/" + SOURCE_REPO +
-                      "/git/trees/" + encodeURIComponent(defaultBranch) + "?recursive=1";
-      const treeResp = await fetch(treeUrl);
-      if (!treeResp.ok) {
-        const text = await treeResp.text();
-        const rl = rateLimitMessage(treeResp, text);
-        throw new Error(rl || ("Could not read the file list (HTTP " + treeResp.status + ")."));
-      }
-      const treeData = await treeResp.json();
+      const treeResp = await fetch(`${api}/git/trees/${encodeURIComponent(defaultBranch)}?recursive=1`, { headers: { Accept: "application/vnd.github+json" } });
+      if (isRateLimited(treeResp)) { finishWithError(rateLimitMessage()); return; }
+      if (!treeResp.ok) { finishWithError("Couldn't list the folder's files. Try again in a moment."); return; }
+      const tree = await treeResp.json();
 
       const prefix = folder + "/";
-      const files = (treeData.tree || []).filter(
-        node => node.type === "blob" && node.path.startsWith(prefix)
-      );
+      const files = (tree.tree || []).filter(node => node.type === "blob" && node.path.startsWith(prefix));
 
-      if (files.length === 0) {
-        throw new Error("That folder appears to be empty.");
-      }
-
-      setStatus("Found " + files.length + " files, downloading…");
+      if (files.length === 0) { finishWithError("That folder appears to be empty."); return; }
 
       const zip = new JSZip();
+      const branchPath = encodeURIComponent(defaultBranch);
 
-      // Fetch each file as binary so images (PNG/JPG/ICO) stay intact.
       for (let i = 0; i < files.length; i++) {
-        const path = files[i].path;
-        const rawUrl = "https://raw.githubusercontent.com/" + SOURCE_OWNER + "/" +
-                       SOURCE_REPO + "/" + encodeURIComponent(defaultBranch) + "/" +
-                       path.split("/").map(encodeURIComponent).join("/");
+        const node = files[i];
+        setStatus("Downloading file " + (i + 1) + " of " + files.length + "…");
+        const encodedPath = node.path.split("/").map(encodeURIComponent).join("/");
+        // raw.githubusercontent.com does NOT count against the API rate limit
+        const rawUrl = `https://raw.githubusercontent.com/${SOURCE_OWNER}/${SOURCE_REPO}/${branchPath}/${encodedPath}`;
         const fileResp = await fetch(rawUrl);
-        if (!fileResp.ok) {
-          throw new Error("Could not download " + path + " (HTTP " + fileResp.status + ").");
-        }
-        const buf = await fileResp.arrayBuffer();
-        // Path relative to the chosen folder so the ZIP opens to its contents.
-        const relativePath = path.slice(prefix.length);
-        zip.file(relativePath, buf);
-        setStatus("Found " + files.length + " files, downloading… (" + (i + 1) + "/" + files.length + ")");
+        if (!fileResp.ok) { finishWithError("Couldn't download " + node.path + ". Try again in a moment."); return; }
+        const bytes = await fileResp.arrayBuffer(); // binary-safe (keeps PNG/ICO icons intact)
+        const relativePath = node.path.slice(prefix.length);
+        zip.file(relativePath, bytes);
       }
 
-      setStatus("Building ZIP…");
+      setStatus("Building your ZIP…");
       const blob = await zip.generateAsync({ type: "blob" });
+      triggerDownload(blob, folder + ".zip");
 
-      const link = document.createElement("a");
-      link.href = URL.createObjectURL(blob);
-      link.download = folder + ".zip";
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      URL.revokeObjectURL(link.href);
-
-      setStatus("Done — your download should start.", "done");
+      setWorking(false);
+      setStatus("Done — your download should start.", "success");
     } catch (err) {
-      setStatus(err.message || String(err), "error");
-    } finally {
-      downloadBtn.disabled = false;
+      finishWithError("Something went wrong while building the ZIP. Try again.");
     }
   }
 
-  downloadBtn.addEventListener("click", downloadFolder);
+  function triggerDownload(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  function setWorking(working, statusText) {
+    isWorking = working;
+    els.btn.disabled = working || !selectedFolder;
+    els.btn.classList.toggle("is-working", working);
+    els.btnSpinner.hidden = !working;
+    els.btnIcon.hidden = working;
+    els.btnLabel.textContent = working ? "Building your ZIP…" : "Download ZIP";
+    if (statusText) setStatus(statusText);
+  }
+
+  function finishWithError(message) {
+    setWorking(false);
+    setStatus(message, "error");
+  }
+
+  els.btn.addEventListener("click", downloadFolder);
   init();
-  </script>
+</script>
 </body>
 </html>

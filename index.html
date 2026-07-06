@@ -311,6 +311,10 @@
   const FREE_FOLDERS      = ["randy-recast-se-assistant", "randy-v2"];
   const DOWNLOAD_PASSWORD = "2026";
 
+  // ----- Hidden folders -----
+  // Folders listed here are never shown as a download option.
+  const HIDDEN_FOLDERS = ["randy-recast-se-assistant"];
+
   // ----- State -----
   let defaultBranch = null;
   let selectedFolder = null;
@@ -374,7 +378,7 @@
       const items = await treeResp.json();
 
       const folders = items
-        .filter(it => it.type === "dir" && !it.name.startsWith("."))
+        .filter(it => it.type === "dir" && !it.name.startsWith(".") && !HIDDEN_FOLDERS.includes(it.name))
         .map(it => it.name)
         .sort((a, b) => a.localeCompare(b));
 

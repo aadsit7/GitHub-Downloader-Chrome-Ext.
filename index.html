@@ -307,8 +307,8 @@
 
   // ----- Download protection -----
   // Every folder downloads only after entering DOWNLOAD_PASSWORD, EXCEPT the
-  // one named in FREE_FOLDER, which downloads with no password.
-  const FREE_FOLDER       = "randy-recast-se-assistant";
+  // ones listed in FREE_FOLDERS, which download with no password.
+  const FREE_FOLDERS      = ["randy-recast-se-assistant", "randy-v2"];
   const DOWNLOAD_PASSWORD = "2026";
 
   // ----- State -----
@@ -422,8 +422,8 @@
     if (!selectedFolder || isWorking) return;
     const folder = selectedFolder;
 
-    // Password gate: required for every folder except the free one.
-    if (folder !== FREE_FOLDER) {
+    // Password gate: required for every folder except the free ones.
+    if (!FREE_FOLDERS.includes(folder)) {
       const entered = prompt('"' + folder + '" is password-protected. Enter the password to download it:');
       if (entered === null) { setStatus("Download cancelled."); return; }
       if (entered !== DOWNLOAD_PASSWORD) { setStatus("Incorrect password — download cancelled.", "error"); return; }

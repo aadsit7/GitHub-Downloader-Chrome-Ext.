@@ -256,6 +256,241 @@
     animation: spin 0.8s linear infinite;
   }
 
+  /* ---------- "How to install" quick link (near the top of the card) ---------- */
+  .guide-link-row {
+    padding: 0 26px 12px;
+    margin-top: -4px;
+  }
+  .guide-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    border-radius: var(--r-pill);
+    border: 1px solid rgba(3, 114, 255, 0.28);
+    background: rgba(3, 114, 255, 0.06);
+    color: var(--accent-blue);
+    font-family: inherit;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.18s ease, border-color 0.18s ease, transform 0.12s ease;
+  }
+  .guide-link:hover { background: rgba(3, 114, 255, 0.12); transform: translateY(-1px); }
+  .guide-link:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 2px; }
+  .guide-link svg { width: 15px; height: 15px; }
+
+  /* ---------- Install guide (revealed after a download or via the link) ---------- */
+  .guide {
+    border-top: 1px solid rgba(255, 255, 255, 0.6);
+    background: rgba(255, 255, 255, 0.34);
+    padding: 22px 24px 26px;
+    scroll-margin-top: 12px;
+  }
+  .guide[hidden] { display: none; }
+
+  .guide-head {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 4px;
+  }
+  .guide-head h2 {
+    margin: 0;
+    font-size: 17px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--text-heading);
+  }
+  .guide-sub {
+    margin: 4px 0 16px;
+    font-size: 13.5px;
+    line-height: 1.5;
+    color: var(--text-body);
+  }
+  /* Close button for when the guide is opened via the link */
+  .guide-close {
+    flex: none;
+    width: 30px; height: 30px;
+    display: grid; place-items: center;
+    border-radius: 999px;
+    border: 1px solid rgba(255, 255, 255, 0.7);
+    background: rgba(255, 255, 255, 0.5);
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: background 0.18s ease, color 0.18s ease;
+  }
+  .guide-close:hover { background: rgba(255, 255, 255, 0.85); color: var(--text-body); }
+  .guide-close:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 2px; }
+  .guide-close svg { width: 16px; height: 16px; }
+
+  /* Browser tabs */
+  .guide-tabs {
+    display: flex;
+    gap: 6px;
+    padding: 5px;
+    margin-bottom: 20px;
+    border-radius: var(--r-pill);
+    background: rgba(3, 114, 255, 0.08);
+    border: 1px solid rgba(255, 255, 255, 0.7);
+  }
+  .guide-tab {
+    flex: 1;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 9px 12px;
+    border: none;
+    border-radius: var(--r-pill);
+    background: transparent;
+    color: var(--text-body);
+    font-family: inherit;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+  }
+  .guide-tab svg { width: 16px; height: 16px; }
+  .guide-tab:hover { color: var(--text-heading); }
+  .guide-tab:focus-visible { outline: 2px solid var(--accent-blue); outline-offset: 2px; }
+  .guide-tab[aria-selected="true"] {
+    background: #fff;
+    color: var(--accent-blue);
+    box-shadow: 0 4px 12px rgba(3, 114, 255, 0.18);
+  }
+
+  /* Browser-specific bits: Chrome shown by default, Edge hidden.
+     Adding .is-edge to the guide flips which set is visible. */
+  .guide .only-edge { display: none; }
+  .guide.is-edge .only-chrome { display: none; }
+  .guide.is-edge .only-edge { display: revert; }
+
+  /* Numbered steps */
+  .steps {
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    counter-reset: step;
+    display: flex;
+    flex-direction: column;
+    gap: 26px;
+  }
+  .step {
+    display: grid;
+    grid-template-columns: 34px 1fr;
+    gap: 14px;
+    align-items: start;
+  }
+  .step-num {
+    counter-increment: step;
+    width: 34px; height: 34px;
+    flex: none;
+    border-radius: 999px;
+    background: var(--accent-gradient);
+    color: #fff;
+    font-size: 15px;
+    font-weight: 700;
+    display: grid;
+    place-items: center;
+    box-shadow: 0 5px 14px rgba(3, 114, 255, 0.28);
+  }
+  .step-num::before { content: counter(step); }
+  .step-body { min-width: 0; }
+  .step-body h3 {
+    margin: 4px 0 6px;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--text-heading);
+    letter-spacing: -0.005em;
+  }
+  .step-body p {
+    margin: 0 0 12px;
+    font-size: 14px;
+    line-height: 1.55;
+    color: var(--text-body);
+  }
+  .step-body p:last-child { margin-bottom: 0; }
+  .step-body code {
+    font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
+    font-size: 12.5px;
+    padding: 2px 7px;
+    border-radius: 6px;
+    background: rgba(3, 114, 255, 0.10);
+    color: var(--accent-blue);
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  .folder-tag {
+    font-weight: 700;
+    color: var(--accent-blue);
+  }
+  .step.is-optional .step-num {
+    background: rgba(3, 114, 255, 0.14);
+    color: var(--accent-blue);
+    box-shadow: none;
+  }
+  .optional-badge {
+    display: inline-block;
+    margin-left: 8px;
+    padding: 1px 8px;
+    border-radius: var(--r-pill);
+    background: rgba(151, 162, 187, 0.18);
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    vertical-align: middle;
+  }
+
+  /* Screenshots: centered, capped width, rounded, soft border + shadow */
+  .step-figure {
+    margin: 10px 0 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+  }
+  .step-figure img {
+    display: block;
+    width: 100%;
+    max-width: 340px;
+    height: auto;
+    border-radius: 14px;
+    border: 1px solid rgba(255, 255, 255, 0.85);
+    box-shadow: var(--shadow-soft);
+    background: #fff;
+  }
+  .step-figure figcaption {
+    font-size: 11.5px;
+    color: var(--text-muted);
+    text-align: center;
+    max-width: 340px;
+  }
+
+  /* Safety note */
+  .safety-note {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    margin-top: 24px;
+    padding: 12px 14px;
+    border-radius: var(--r-tile);
+    background: rgba(3, 114, 255, 0.06);
+    border: 1px solid rgba(3, 114, 255, 0.16);
+    font-size: 12.5px;
+    line-height: 1.5;
+    color: var(--text-body);
+  }
+  .safety-note svg { width: 17px; height: 17px; flex: none; color: var(--accent-blue); margin-top: 1px; }
+
+  @media (max-width: 420px) {
+    .step { grid-template-columns: 28px 1fr; gap: 11px; }
+    .step-num { width: 28px; height: 28px; font-size: 13px; }
+  }
+
   @media (prefers-reduced-motion: reduce) {
     * { animation: none !important; transition: none !important; }
   }
@@ -280,6 +515,16 @@
 
     <p class="intro">Pick an extension folder below and download it as a ZIP — built right here in your browser.</p>
 
+    <!-- Quick access to the install guide, available any time -->
+    <div class="guide-link-row">
+      <button type="button" class="guide-link" id="guideLink" aria-controls="installGuide" aria-expanded="false">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+        </svg>
+        How to install
+      </button>
+    </div>
+
     <!-- Zone 2: content -->
     <section class="content" id="content">
       <div class="folder-list" id="folderList" hidden></div>
@@ -298,6 +543,150 @@
         <span id="btnLabel">Download ZIP</span>
       </button>
     </footer>
+
+    <!-- Zone 4: install guide (hidden until a download starts or the link is clicked) -->
+    <section class="guide" id="installGuide" aria-labelledby="guideHeading" hidden>
+      <div class="guide-head">
+        <h2 id="guideHeading">How to install your extension</h2>
+        <button type="button" class="guide-close" id="guideClose" aria-label="Hide the install guide">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+          </svg>
+        </button>
+      </div>
+      <p class="guide-sub">
+        Follow these steps to add <span class="folder-tag guide-folder" id="guideFolderName" data-default="your extension" data-tpl="{name}">your extension</span>
+        to your browser. It only takes a minute — no technical experience needed.
+      </p>
+
+      <!-- Browser picker -->
+      <div class="guide-tabs" role="tablist" aria-label="Choose your browser">
+        <button type="button" class="guide-tab" id="tabChrome" role="tab" aria-selected="true" aria-controls="installGuide" tabindex="0">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="4"/><line x1="21.17" y1="8" x2="12" y2="8"/><line x1="3.95" y1="6.06" x2="8.54" y2="14"/><line x1="10.88" y1="21.94" x2="15.46" y2="14"/>
+          </svg>
+          Chrome
+        </button>
+        <button type="button" class="guide-tab" id="tabEdge" role="tab" aria-selected="false" aria-controls="installGuide" tabindex="-1">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+          </svg>
+          Edge
+        </button>
+      </div>
+
+      <!-- Steps -->
+      <ol class="steps">
+        <!-- 1: Download & save -->
+        <li class="step">
+          <span class="step-num" aria-hidden="true"></span>
+          <div class="step-body">
+            <h3>Download the ZIP and save it somewhere easy to find</h3>
+            <p>
+              Click <strong>Download ZIP</strong> above. When your browser asks, save
+              <span class="folder-tag guide-folder" data-default="the file" data-tpl="{name}.zip">the file</span> somewhere you'll
+              remember — your <strong>Downloads</strong> or <strong>Desktop</strong> folder works well.
+            </p>
+            <figure class="step-figure">
+              <img src="install-images/01-download-button.png" alt="The blue Download ZIP button on this page, used to start the download." loading="lazy" />
+            </figure>
+            <figure class="step-figure">
+              <img src="install-images/02-download-saved.png" alt="The browser's download history showing the saved ZIP file after the download finishes." loading="lazy" />
+            </figure>
+          </div>
+        </li>
+
+        <!-- 2: Extract -->
+        <li class="step">
+          <span class="step-num" aria-hidden="true"></span>
+          <div class="step-body">
+            <h3>Unzip (extract) the folder</h3>
+            <p>
+              <strong>On Windows:</strong> right-click the ZIP file and choose <strong>Extract All…</strong>,
+              then confirm.<br />
+              <strong>On Mac:</strong> just double-click the ZIP file — it unzips on its own.
+            </p>
+            <p>You'll end up with a regular folder <span class="guide-folder" data-default="of the extension's files" data-tpl="named &quot;{name}&quot;">of the extension's files</span>.</p>
+            <figure class="step-figure">
+              <img src="install-images/03-extract-folder.png" alt="Extracting the downloaded ZIP into a normal folder on the computer." loading="lazy" />
+            </figure>
+          </div>
+        </li>
+
+        <!-- 3: Open extensions page (browser-specific image) -->
+        <li class="step">
+          <span class="step-num" aria-hidden="true"></span>
+          <div class="step-body">
+            <h3>Open your browser's Extensions page</h3>
+            <p class="only-chrome">
+              In <strong>Chrome</strong>, click the address bar, type
+              <code>chrome://extensions</code>, and press <strong>Enter</strong>.
+            </p>
+            <p class="only-edge">
+              In <strong>Edge</strong>, click the address bar, type
+              <code>edge://extensions</code>, and press <strong>Enter</strong> — or open the
+              <strong>… menu → Extensions → Manage extensions</strong>.
+            </p>
+            <figure class="step-figure">
+              <img id="imgOpenExtensions" src="install-images/chrome-04-open-extensions.png" alt="The Chrome Extensions page open in the browser." loading="lazy" />
+            </figure>
+          </div>
+        </li>
+
+        <!-- 4: Developer mode + load unpacked (browser-specific image) -->
+        <li class="step">
+          <span class="step-num" aria-hidden="true"></span>
+          <div class="step-body">
+            <h3>Turn on Developer mode, then click "Load unpacked"</h3>
+            <p>
+              Switch on <strong>Developer mode</strong> (the toggle is
+              <span class="only-chrome">in the top-right corner</span><span class="only-edge">in the bottom-left corner</span>).
+              A new <strong>Load unpacked</strong> button appears — click it.
+            </p>
+            <figure class="step-figure">
+              <img id="imgDevMode" src="install-images/chrome-05-developer-mode-load-unpacked.png" alt="Developer mode turned on and the Load unpacked button highlighted on the Chrome Extensions page." loading="lazy" />
+            </figure>
+          </div>
+        </li>
+
+        <!-- 5: Select the folder -->
+        <li class="step">
+          <span class="step-num" aria-hidden="true"></span>
+          <div class="step-body">
+            <h3>Select the folder you just extracted</h3>
+            <p>
+              In the file picker, choose the <span class="folder-tag guide-folder" data-default="extracted folder" data-tpl="{name}">extracted folder</span>
+              and click <strong>Select Folder</strong> (Windows) or <strong>Open</strong> (Mac).
+              That's it — your extension is installed and ready to use.
+            </p>
+          </div>
+        </li>
+
+        <!-- 6: Optional pin -->
+        <li class="step is-optional">
+          <span class="step-num" aria-hidden="true"></span>
+          <div class="step-body">
+            <h3>Pin it to the toolbar <span class="optional-badge">Optional</span></h3>
+            <p>
+              Click the <strong>puzzle-piece</strong> icon near the top-right of your browser, find
+              <span class="folder-tag guide-folder" data-default="your extension" data-tpl="{name}">your extension</span>, and click the
+              <strong>pin</strong> so it's always one click away.
+            </p>
+            <figure class="step-figure">
+              <img src="install-images/07-optional-pin-to-toolbar.png" alt="Pinning the newly installed extension to the browser toolbar from the extensions menu." loading="lazy" />
+            </figure>
+          </div>
+        </li>
+      </ol>
+
+      <!-- Safety note -->
+      <p class="safety-note">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+        <span>Only load extensions you trust — an unpacked extension runs with all the permissions it requests.</span>
+      </p>
+    </section>
   </main>
 
 <script>
@@ -435,6 +824,11 @@
 
     setWorking(true, "Finding files…");
 
+    // Reveal the step-by-step install guide right below the button, worded for
+    // the folder that's now downloading.
+    personaliseGuide(folder);
+    openGuide(true);
+
     try {
       const treeResp = await fetch(`${api}/git/trees/${encodeURIComponent(defaultBranch)}?recursive=1`, { headers: { Accept: "application/vnd.github+json" } });
       if (isRateLimited(treeResp)) { finishWithError(rateLimitMessage()); return; }
@@ -498,6 +892,109 @@
     setWorking(false);
     setStatus(message, "error");
   }
+
+  // ==========================================================================
+  //  Install guide: reveal, browser tabs, and folder-name personalisation
+  // ==========================================================================
+  const guide = {
+    section:   document.getElementById("installGuide"),
+    link:      document.getElementById("guideLink"),
+    close:     document.getElementById("guideClose"),
+    tabs:      [document.getElementById("tabChrome"), document.getElementById("tabEdge")],
+    imgOpen:   document.getElementById("imgOpenExtensions"),
+    imgDev:    document.getElementById("imgDevMode"),
+    folderName: null, // remembers the last folder we personalised the wording with
+  };
+
+  // Per-browser screenshots + alt text for the two browser-specific steps.
+  const BROWSER_IMAGES = {
+    chrome: {
+      open: { src: "install-images/chrome-04-open-extensions.png", alt: "The Chrome Extensions page open in the browser." },
+      dev:  { src: "install-images/chrome-05-developer-mode-load-unpacked.png", alt: "Developer mode turned on and the Load unpacked button highlighted on the Chrome Extensions page." },
+    },
+    edge: {
+      open: { src: "install-images/edge-04-open-extensions.png", alt: "The Edge Extensions page open in the browser." },
+      dev:  { src: "install-images/edge-05-developer-mode-load-unpacked.png", alt: "Developer mode turned on and the Load unpacked button highlighted on the Edge Extensions page." },
+    },
+  };
+
+  // Swap the browser-specific screenshots + toggle the Chrome/Edge wording.
+  function setGuideBrowser(browser) {
+    const isEdge = browser === "edge";
+    guide.section.classList.toggle("is-edge", isEdge);
+
+    const imgs = BROWSER_IMAGES[isEdge ? "edge" : "chrome"];
+    guide.imgOpen.src = imgs.open.src;
+    guide.imgOpen.alt = imgs.open.alt;
+    guide.imgDev.src  = imgs.dev.src;
+    guide.imgDev.alt  = imgs.dev.alt;
+
+    guide.tabs.forEach(tab => {
+      const selected = tab === (isEdge ? guide.tabs[1] : guide.tabs[0]);
+      tab.setAttribute("aria-selected", selected ? "true" : "false");
+      tab.tabIndex = selected ? 0 : -1;
+    });
+  }
+
+  // Drop the selected folder's name into the step wording so it matches the
+  // ZIP the person just downloaded. Falls back to friendly generic wording.
+  function personaliseGuide(name) {
+    guide.folderName = name || null;
+    document.querySelectorAll(".guide-folder").forEach(el => {
+      const tpl = el.dataset.tpl || "{name}";
+      el.textContent = name ? tpl.replace("{name}", name) : el.dataset.default;
+    });
+  }
+
+  function openGuide(scrollIntoView) {
+    guide.section.hidden = false;
+    guide.link.setAttribute("aria-expanded", "true");
+    if (scrollIntoView) {
+      guide.section.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }
+
+  function closeGuide() {
+    guide.section.hidden = true;
+    guide.link.setAttribute("aria-expanded", "false");
+    guide.link.focus();
+  }
+
+  // Tab clicks
+  guide.tabs.forEach(tab => {
+    tab.addEventListener("click", () => setGuideBrowser(tab === guide.tabs[1] ? "edge" : "chrome"));
+  });
+
+  // Keyboard support for the tablist (Left/Right/Home/End move between tabs)
+  guide.tabs.forEach((tab, i) => {
+    tab.addEventListener("keydown", (e) => {
+      let next = null;
+      if (e.key === "ArrowRight" || e.key === "ArrowDown") next = guide.tabs[(i + 1) % guide.tabs.length];
+      else if (e.key === "ArrowLeft" || e.key === "ArrowUp") next = guide.tabs[(i - 1 + guide.tabs.length) % guide.tabs.length];
+      else if (e.key === "Home") next = guide.tabs[0];
+      else if (e.key === "End") next = guide.tabs[guide.tabs.length - 1];
+      if (next) {
+        e.preventDefault();
+        setGuideBrowser(next === guide.tabs[1] ? "edge" : "chrome");
+        next.focus();
+      }
+    });
+  });
+
+  // "How to install" link toggles the guide open/closed
+  guide.link.addEventListener("click", () => {
+    if (guide.section.hidden) {
+      personaliseGuide(selectedFolder);
+      openGuide(true);
+    } else {
+      closeGuide();
+    }
+  });
+
+  guide.close.addEventListener("click", closeGuide);
+
+  // Start on the Chrome tab.
+  setGuideBrowser("chrome");
 
   els.btn.addEventListener("click", downloadFolder);
   init();

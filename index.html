@@ -445,29 +445,85 @@
     vertical-align: middle;
   }
 
-  /* Screenshots: centered, capped width, rounded, soft border + shadow */
+  /* Illustrations: self-contained animated SVGs, centered, capped width,
+     rounded, soft border + shadow — no external image files needed. */
   .step-figure {
-    margin: 10px 0 0;
+    margin: 12px 0 0;
     display: flex;
     flex-direction: column;
     align-items: center;
     gap: 6px;
   }
-  .step-figure img {
-    display: block;
+  .step-illus {
     width: 100%;
     max-width: 340px;
-    height: auto;
     border-radius: 14px;
     border: 1px solid rgba(255, 255, 255, 0.85);
     box-shadow: var(--shadow-soft);
-    background: #fff;
+    background: linear-gradient(180deg, #F6FAFF 0%, #ECF3FF 100%);
+    overflow: hidden;
   }
+  .step-illus svg { display: block; width: 100%; height: auto; }
   .step-figure figcaption {
     font-size: 11.5px;
     color: var(--text-muted);
     text-align: center;
     max-width: 340px;
+  }
+
+  /* ---- Illustration animations (subtle; disabled under reduced-motion) ---- */
+  /* Blinking text caret in the address bar */
+  .illus-caret { animation: illusCaret 1.1s steps(1) infinite; }
+  @keyframes illusCaret { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0; } }
+
+  /* Tapping cursor on the download button */
+  .illus-cursor { animation: illusTap 2.6s ease-in-out infinite; transform-origin: center; }
+  @keyframes illusTap {
+    0%, 40%, 100% { transform: translate(0, 0); }
+    48%, 60% { transform: translate(-4px, -4px); }
+  }
+  .illus-btn { animation: illusBtnPress 2.6s ease-in-out infinite; transform-origin: center; transform-box: fill-box; }
+  @keyframes illusBtnPress {
+    0%, 44%, 66%, 100% { transform: scale(1); }
+    52%, 58% { transform: scale(0.97); }
+  }
+
+  /* The saved-file chip gently floating (stays visible) */
+  .illus-shelf { animation: illusRise 3s ease-in-out infinite; }
+  @keyframes illusRise { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-2.5px); } }
+
+  /* Arrow dashes flowing from ZIP to folder */
+  .illus-flow { stroke-dasharray: 6 6; animation: illusFlow 0.9s linear infinite; }
+  @keyframes illusFlow { to { stroke-dashoffset: -12; } }
+
+  /* Files popping into the extracted folder */
+  .illus-pop { animation: illusPop 2.4s ease-in-out infinite; transform-box: fill-box; transform-origin: bottom center; }
+  .illus-pop.d2 { animation-delay: 0.2s; }
+  .illus-pop.d3 { animation-delay: 0.4s; }
+  @keyframes illusPop {
+    0%, 30% { opacity: 0; transform: scale(0.4); }
+    45%, 85% { opacity: 1; transform: scale(1); }
+    100% { opacity: 0; transform: scale(0.4); }
+  }
+
+  /* Developer-mode toggle knob sliding on */
+  .illus-knob { animation: illusKnob 2.8s ease-in-out infinite; }
+  @keyframes illusKnob { 0%, 35% { transform: translateX(0); } 55%, 100% { transform: translateX(14px); } }
+  .illus-track { animation: illusTrack 2.8s ease-in-out infinite; }
+  @keyframes illusTrack { 0%, 35% { fill: #C6D2E8; } 55%, 100% { fill: var(--accent-blue); } }
+
+  /* Pulsing highlight ring around a call-to-action */
+  .illus-ring { animation: illusRing 2s ease-out infinite; transform-box: fill-box; transform-origin: center; }
+  @keyframes illusRing {
+    0% { opacity: 0.9; transform: scale(1); }
+    100% { opacity: 0; transform: scale(1.06); }
+  }
+
+  /* Pin dropping onto the toolbar */
+  .illus-pin { animation: illusPin 2.6s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+  @keyframes illusPin {
+    0%, 30% { opacity: 0; transform: translateY(-7px) rotate(-8deg); }
+    50%, 100% { opacity: 1; transform: translateY(0) rotate(0); }
   }
 
   /* Safety note */
@@ -588,10 +644,35 @@
               remember — your <strong>Downloads</strong> or <strong>Desktop</strong> folder works well.
             </p>
             <figure class="step-figure">
-              <img src="install-images/01-download-button.png" alt="The blue Download ZIP button on this page, used to start the download." loading="lazy" />
-            </figure>
-            <figure class="step-figure">
-              <img src="install-images/02-download-saved.png" alt="The browser's download history showing the saved ZIP file after the download finishes." loading="lazy" />
+              <div class="step-illus">
+                <svg viewBox="0 0 340 200" role="img" aria-labelledby="illus1Title">
+                  <title id="illus1Title">Clicking the blue Download ZIP button, then the saved ZIP file appearing in the browser's downloads.</title>
+                  <defs>
+                    <linearGradient id="btnGrad" x1="0" y1="0" x2="1" y2="1">
+                      <stop offset="0" stop-color="#0372FF"/><stop offset="1" stop-color="#31D1FF"/>
+                    </linearGradient>
+                  </defs>
+                  <!-- Download button -->
+                  <g class="illus-btn">
+                    <rect x="60" y="38" width="220" height="46" rx="23" fill="url(#btnGrad)"/>
+                    <path d="M150 52 v15 M144 61 l6 6 6-6 M143 75 h14" fill="none" stroke="#fff" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/>
+                    <text x="176" y="66" fill="#fff" font-family="DM Sans, sans-serif" font-size="15" font-weight="700">Download ZIP</text>
+                  </g>
+                  <!-- Cursor -->
+                  <g class="illus-cursor">
+                    <path d="M243 72 l0 27 6.5 -7.5 5 10.5 4 -2 -5 -10.5 9.5 0 z" fill="#161F5B" stroke="#fff" stroke-width="1.4" stroke-linejoin="round"/>
+                  </g>
+                  <!-- Saved-file chip -->
+                  <g class="illus-shelf">
+                    <rect x="66" y="120" width="208" height="54" rx="12" fill="#fff" stroke="#E1E9F7"/>
+                    <path d="M84 134 h13 l5 5 v19 a2 2 0 0 1 -2 2 h-16 a2 2 0 0 1 -2 -2 v-22 a2 2 0 0 1 2 -2 z" fill="#EAF2FF" stroke="#9DC1FB" stroke-width="1.4"/>
+                    <text x="118" y="151" fill="#161F5B" font-family="DM Sans, sans-serif" font-size="13" font-weight="600" class="guide-folder" data-default="extension.zip" data-tpl="{name}.zip">extension.zip</text>
+                    <text x="118" y="164" fill="#97A2BB" font-family="DM Sans, sans-serif" font-size="10">Downloaded</text>
+                    <circle cx="252" cy="147" r="11" fill="#E6F7EE"/>
+                    <path d="M246.5 147 l4 4 7 -8" fill="none" stroke="#1FA85C" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+                  </g>
+                </svg>
+              </div>
             </figure>
           </div>
         </li>
@@ -608,7 +689,24 @@
             </p>
             <p>You'll end up with a regular folder <span class="guide-folder" data-default="of the extension's files" data-tpl="named &quot;{name}&quot;">of the extension's files</span>.</p>
             <figure class="step-figure">
-              <img src="install-images/03-extract-folder.png" alt="Extracting the downloaded ZIP into a normal folder on the computer." loading="lazy" />
+              <div class="step-illus">
+                <svg viewBox="0 0 340 180" role="img" aria-labelledby="illus2Title">
+                  <title id="illus2Title">A zipped folder being extracted into a normal folder of files.</title>
+                  <!-- ZIP archive -->
+                  <rect x="44" y="56" width="72" height="64" rx="10" fill="#EAF2FF" stroke="#9DC1FB" stroke-width="2"/>
+                  <line x1="80" y1="56" x2="80" y2="120" stroke="#0372FF" stroke-width="2" stroke-dasharray="4 3"/>
+                  <rect x="75" y="80" width="10" height="15" rx="2" fill="#0372FF"/>
+                  <text x="80" y="140" text-anchor="middle" fill="#4D5878" font-family="DM Sans, sans-serif" font-size="11" font-weight="700">.zip</text>
+                  <!-- Flow arrow -->
+                  <line x1="128" y1="88" x2="192" y2="88" stroke="#31D1FF" stroke-width="3" stroke-linecap="round" class="illus-flow"/>
+                  <path d="M192 88 l-10 -6 M192 88 l-10 6" stroke="#31D1FF" stroke-width="3" stroke-linecap="round" fill="none"/>
+                  <!-- Extracted folder -->
+                  <path d="M214 72 h26 l9 10 h43 a8 8 0 0 1 8 8 v32 a8 8 0 0 1 -8 8 h-78 a8 8 0 0 1 -8 -8 v-50 a8 8 0 0 1 8 -8 z" fill="#DCEBFF" stroke="#9DC1FB" stroke-width="2"/>
+                  <rect class="illus-pop"    x="228" y="94" width="15" height="19" rx="2.5" fill="#fff" stroke="#0372FF" stroke-width="1.6"/>
+                  <rect class="illus-pop d2" x="251" y="94" width="15" height="19" rx="2.5" fill="#fff" stroke="#0372FF" stroke-width="1.6"/>
+                  <rect class="illus-pop d3" x="274" y="94" width="15" height="19" rx="2.5" fill="#fff" stroke="#0372FF" stroke-width="1.6"/>
+                </svg>
+              </div>
             </figure>
           </div>
         </li>
@@ -628,7 +726,31 @@
               <strong>… menu → Extensions → Manage extensions</strong>.
             </p>
             <figure class="step-figure">
-              <img id="imgOpenExtensions" src="install-images/chrome-04-open-extensions.png" alt="The Chrome Extensions page open in the browser." loading="lazy" />
+              <div class="step-illus">
+                <svg viewBox="0 0 340 190" role="img" aria-labelledby="illus3Title">
+                  <title id="illus3Title">The Chrome Extensions page open in the browser.</title>
+                  <rect x="16" y="16" width="308" height="158" rx="12" fill="#fff" stroke="#E1E9F7"/>
+                  <path d="M16 28 a12 12 0 0 1 12 -12 h284 a12 12 0 0 1 12 12 v14 h-308 z" fill="#F3F7FF"/>
+                  <circle cx="34" cy="33" r="4" fill="#FF6B6B"/><circle cx="48" cy="33" r="4" fill="#FFC24B"/><circle cx="62" cy="33" r="4" fill="#3FCB7E"/>
+                  <rect x="80" y="24" width="228" height="19" rx="9.5" fill="#fff" stroke="#D9E4F7"/>
+                  <text id="illusAddr" x="92" y="37" fill="#0372FF" font-family="ui-monospace, monospace" font-size="11" font-weight="600">chrome://extensions</text>
+                  <!-- Extension cards -->
+                  <g>
+                    <rect x="34" y="66" width="128" height="92" rx="10" fill="#F6FAFF" stroke="#E1E9F7"/>
+                    <rect x="48" y="80" width="26" height="26" rx="7" fill="#0372FF"/>
+                    <rect x="82" y="84" width="58" height="7" rx="3.5" fill="#C9D6EE"/>
+                    <rect x="82" y="96" width="38" height="6" rx="3" fill="#DCE5F5"/>
+                    <rect x="120" y="132" width="30" height="14" rx="7" fill="#0372FF"/><circle cx="141" cy="139" r="5" fill="#fff"/>
+                  </g>
+                  <g>
+                    <rect x="178" y="66" width="128" height="92" rx="10" fill="#F6FAFF" stroke="#E1E9F7"/>
+                    <rect x="192" y="80" width="26" height="26" rx="7" fill="#31D1FF"/>
+                    <rect x="226" y="84" width="58" height="7" rx="3.5" fill="#C9D6EE"/>
+                    <rect x="226" y="96" width="38" height="6" rx="3" fill="#DCE5F5"/>
+                    <rect x="264" y="132" width="30" height="14" rx="7" fill="#0372FF"/><circle cx="285" cy="139" r="5" fill="#fff"/>
+                  </g>
+                </svg>
+              </div>
             </figure>
           </div>
         </li>
@@ -644,7 +766,26 @@
               A new <strong>Load unpacked</strong> button appears — click it.
             </p>
             <figure class="step-figure">
-              <img id="imgDevMode" src="install-images/chrome-05-developer-mode-load-unpacked.png" alt="Developer mode turned on and the Load unpacked button highlighted on the Chrome Extensions page." loading="lazy" />
+              <div class="step-illus">
+                <svg viewBox="0 0 340 170" role="img" aria-labelledby="illus4Title">
+                  <title id="illus4Title">Developer mode turned on and the Load unpacked button highlighted on the Chrome Extensions page.</title>
+                  <rect x="16" y="16" width="308" height="138" rx="12" fill="#fff" stroke="#E1E9F7"/>
+                  <text x="34" y="44" fill="#161F5B" font-family="DM Sans, sans-serif" font-size="13" font-weight="700">Extensions</text>
+                  <!-- Developer mode toggle -->
+                  <text x="200" y="44" fill="#4D5878" font-family="DM Sans, sans-serif" font-size="11" font-weight="600">Developer mode</text>
+                  <rect class="illus-track" x="292" y="33" width="26" height="14" rx="7" fill="#C6D2E8"/>
+                  <circle class="illus-knob" cx="300" cy="40" r="5.4" fill="#fff"/>
+                  <line x1="34" y1="58" x2="306" y2="58" stroke="#EEF3FB"/>
+                  <!-- Load unpacked button with pulsing ring -->
+                  <rect class="illus-ring" x="34" y="72" width="116" height="34" rx="9" fill="none" stroke="#31D1FF" stroke-width="2.5"/>
+                  <rect x="34" y="72" width="116" height="34" rx="9" fill="#EAF2FF" stroke="#0372FF" stroke-width="1.6"/>
+                  <path d="M48 89 h12 M54 83 v12" stroke="#0372FF" stroke-width="2" stroke-linecap="round"/>
+                  <text x="67" y="93" fill="#0372FF" font-family="DM Sans, sans-serif" font-size="11" font-weight="700">Load unpacked</text>
+                  <!-- Faint existing cards -->
+                  <rect x="158" y="72" width="68" height="62" rx="9" fill="#F6FAFF" stroke="#EEF3FB"/>
+                  <rect x="238" y="72" width="68" height="62" rx="9" fill="#F6FAFF" stroke="#EEF3FB"/>
+                </svg>
+              </div>
             </figure>
           </div>
         </li>
@@ -673,7 +814,30 @@
               <strong>pin</strong> so it's always one click away.
             </p>
             <figure class="step-figure">
-              <img src="install-images/07-optional-pin-to-toolbar.png" alt="Pinning the newly installed extension to the browser toolbar from the extensions menu." loading="lazy" />
+              <div class="step-illus">
+                <svg viewBox="0 0 340 180" role="img" aria-labelledby="illus6Title">
+                  <title id="illus6Title">Pinning the newly installed extension to the browser toolbar.</title>
+                  <!-- Toolbar -->
+                  <rect x="16" y="18" width="308" height="30" rx="9" fill="#F3F7FF" stroke="#E1E9F7"/>
+                  <rect x="248" y="26" width="16" height="16" rx="4" fill="#EAF2FF" stroke="#0372FF" stroke-width="1.4"/>
+                  <circle cx="256" cy="26" r="2.6" fill="#EAF2FF" stroke="#0372FF" stroke-width="1.4"/>
+                  <circle cx="292" cy="33" r="9" fill="#fff" stroke="#D9E4F7"/>
+                  <!-- Extensions dropdown -->
+                  <rect x="150" y="58" width="170" height="104" rx="12" fill="#fff" stroke="#E1E9F7"/>
+                  <text x="166" y="80" fill="#97A2BB" font-family="DM Sans, sans-serif" font-size="9" font-weight="700" letter-spacing="0.5">EXTENSIONS</text>
+                  <rect x="160" y="90" width="150" height="32" rx="8" fill="#F6FAFF"/>
+                  <rect x="168" y="97" width="18" height="18" rx="5" fill="#0372FF"/>
+                  <text x="194" y="109" fill="#161F5B" font-family="DM Sans, sans-serif" font-size="11" font-weight="600" class="guide-folder" data-default="Your extension" data-tpl="{name}">Your extension</text>
+                  <!-- Pin dropping in (outer <g> positions, inner animates so the
+                       CSS transform doesn't override the SVG placement) -->
+                  <g transform="translate(289,95)">
+                    <g class="illus-pin">
+                      <path d="M4 0 h7 l-1.5 7 3.5 3.5 v2 h-14 v-2 l3.5 -3.5 z" fill="#0372FF"/>
+                      <line x1="7" y1="12.5" x2="7" y2="18" stroke="#0372FF" stroke-width="1.6" stroke-linecap="round"/>
+                    </g>
+                  </g>
+                </svg>
+              </div>
             </figure>
           </div>
         </li>
@@ -901,33 +1065,35 @@
     link:      document.getElementById("guideLink"),
     close:     document.getElementById("guideClose"),
     tabs:      [document.getElementById("tabChrome"), document.getElementById("tabEdge")],
-    imgOpen:   document.getElementById("imgOpenExtensions"),
-    imgDev:    document.getElementById("imgDevMode"),
+    addr:      document.getElementById("illusAddr"),     // address-bar text in illustration 3
+    illus3Title: document.getElementById("illus3Title"), // accessible titles for the
+    illus4Title: document.getElementById("illus4Title"), // two browser-specific illustrations
     folderName: null, // remembers the last folder we personalised the wording with
   };
 
-  // Per-browser screenshots + alt text for the two browser-specific steps.
-  const BROWSER_IMAGES = {
+  // Browser-specific bits for the two illustrations that mimic the extensions page.
+  const BROWSER_ILLUS = {
     chrome: {
-      open: { src: "install-images/chrome-04-open-extensions.png", alt: "The Chrome Extensions page open in the browser." },
-      dev:  { src: "install-images/chrome-05-developer-mode-load-unpacked.png", alt: "Developer mode turned on and the Load unpacked button highlighted on the Chrome Extensions page." },
+      url:       "chrome://extensions",
+      openTitle: "The Chrome Extensions page open in the browser.",
+      devTitle:  "Developer mode turned on and the Load unpacked button highlighted on the Chrome Extensions page.",
     },
     edge: {
-      open: { src: "install-images/edge-04-open-extensions.png", alt: "The Edge Extensions page open in the browser." },
-      dev:  { src: "install-images/edge-05-developer-mode-load-unpacked.png", alt: "Developer mode turned on and the Load unpacked button highlighted on the Edge Extensions page." },
+      url:       "edge://extensions",
+      openTitle: "The Edge Extensions page open in the browser.",
+      devTitle:  "Developer mode turned on and the Load unpacked button highlighted on the Edge Extensions page.",
     },
   };
 
-  // Swap the browser-specific screenshots + toggle the Chrome/Edge wording.
+  // Update the browser-specific illustrations + toggle the Chrome/Edge wording.
   function setGuideBrowser(browser) {
     const isEdge = browser === "edge";
     guide.section.classList.toggle("is-edge", isEdge);
 
-    const imgs = BROWSER_IMAGES[isEdge ? "edge" : "chrome"];
-    guide.imgOpen.src = imgs.open.src;
-    guide.imgOpen.alt = imgs.open.alt;
-    guide.imgDev.src  = imgs.dev.src;
-    guide.imgDev.alt  = imgs.dev.alt;
+    const b = BROWSER_ILLUS[isEdge ? "edge" : "chrome"];
+    if (guide.addr) guide.addr.textContent = b.url;
+    if (guide.illus3Title) guide.illus3Title.textContent = b.openTitle;
+    if (guide.illus4Title) guide.illus4Title.textContent = b.devTitle;
 
     guide.tabs.forEach(tab => {
       const selected = tab === (isEdge ? guide.tabs[1] : guide.tabs[0]);

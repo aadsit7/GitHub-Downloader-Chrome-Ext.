@@ -868,6 +868,15 @@
   // Folders listed here are never shown as a download option.
   const HIDDEN_FOLDERS = ["randy-recast-se-assistant"];
 
+  // ----- Display labels -----
+  // Purely cosmetic: shows a friendlier name in the UI while the real folder
+  // name (the key) is still used for every backend/API/download operation.
+  const FOLDER_LABELS = {
+    "randy-v2": "Recast Virtual SE Assistant",
+  };
+  // Returns what the user should see for a given real folder name.
+  function labelFor(name) { return FOLDER_LABELS[name] || name; }
+
   // ----- State -----
   let defaultBranch = null;
   let selectedFolder = null;
@@ -958,7 +967,8 @@
         '<span class="folder-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></span>' +
         '<span class="folder-name"></span>' +
         '<span class="radio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>';
-      card.querySelector(".folder-name").textContent = name;
+      // Show the friendly label; the real folder name stays in dataset.folder.
+      card.querySelector(".folder-name").textContent = labelFor(name);
       card.addEventListener("click", () => selectFolder(name, card));
       els.list.appendChild(card);
     });
@@ -971,7 +981,7 @@
     document.querySelectorAll(".folder-card").forEach(c => c.classList.remove("is-selected"));
     card.classList.add("is-selected");
     els.btn.disabled = false;
-    setStatus("Ready to download " + name + ".");
+    setStatus("Ready to download " + labelFor(name) + ".");
   }
 
   // ----- Download chosen folder as a ZIP -----

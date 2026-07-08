@@ -1130,10 +1130,12 @@
     }
   }
 
-  function closeGuide() {
+  // returnFocus: move focus back to the "How to install" link (for keyboard /
+  // explicit closes). Omitted for click-outside so we don't yank focus around.
+  function closeGuide(returnFocus) {
     guide.section.hidden = true;
     guide.link.setAttribute("aria-expanded", "false");
-    guide.link.focus();
+    if (returnFocus) guide.link.focus();
   }
 
   // Tab clicks
@@ -1163,11 +1165,28 @@
       personaliseGuide(selectedFolder);
       openGuide(true);
     } else {
-      closeGuide();
+      closeGuide(true);
     }
   });
 
-  guide.close.addEventListener("click", closeGuide);
+  guide.close.addEventListener("click", () => closeGuide(true));
+
+  // Click anywhere outside the guide to dismiss it and get back to the
+  // downloader. Ignore clicks on the guide itself, on the toggle link (it
+  // manages its own open/close), and on the Download button (its click is what
+  // opens the guide in the first place, so it must not immediately close it).
+  document.addEventListener("click", (e) => {
+    if (guide.section.hidden) return;
+    if (guide.section.contains(e.target)) return;
+    if (guide.link.contains(e.target)) return;
+    if (els.btn.contains(e.target)) return;
+    closeGuide();
+  });
+
+  // Escape also closes the guide (and returns focus to the link).
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape" && !guide.section.hidden) closeGuide(true);
+  });
 
   // Start on the Chrome tab.
   setGuideBrowser("chrome");

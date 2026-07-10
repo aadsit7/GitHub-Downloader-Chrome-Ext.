@@ -955,6 +955,11 @@
   // Folders listed here are never shown as a download option.
   const HIDDEN_FOLDERS = ["randy-recast-se-assistant"];
 
+  // ----- Pinned folders -----
+  // Folders listed here (by real name) always appear at the top of the list,
+  // in this order, ahead of the alphabetical rest.
+  const PINNED_FOLDERS = ["randy-v2"];
+
   // ----- Display labels -----
   // Purely cosmetic: shows a friendlier name in the UI while the real folder
   // name (the key) is still used for every backend/API/download operation.
@@ -1029,7 +1034,14 @@
       const folders = items
         .filter(it => it.type === "dir" && !it.name.startsWith(".") && !HIDDEN_FOLDERS.includes(it.name))
         .map(it => it.name)
-        .sort((a, b) => a.localeCompare(b));
+        .sort((a, b) => {
+          const pa = PINNED_FOLDERS.indexOf(a);
+          const pb = PINNED_FOLDERS.indexOf(b);
+          if (pa !== -1 || pb !== -1) {
+            return (pa === -1 ? Infinity : pa) - (pb === -1 ? Infinity : pb);
+          }
+          return a.localeCompare(b);
+        });
 
       if (folders.length === 0) {
         showState(icon("empty") + "<p>No folders found in this repository yet.</p>", false);

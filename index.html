@@ -146,15 +146,25 @@
     box-shadow: 0 6px 18px rgba(3, 114, 255, 0.18);
   }
 
+  /* App-icon tile: a colored gradient square with the folder's monogram.
+     The gradient, glow, and letter are set per folder (see folderVisual in JS)
+     via the --ico-* custom properties, so every folder reads as its own icon. */
   .folder-ico {
-    width: 38px; height: 38px; flex: none;
-    border-radius: 12px;
+    width: 40px; height: 40px; flex: none;
+    border-radius: 13px;
     display: grid; place-items: center;
-    background: rgba(3, 114, 255, 0.10);
-    color: var(--accent-blue);
+    background: linear-gradient(140deg, var(--ico-c1, var(--accent-blue)) 0%, var(--ico-c2, var(--accent-cyan)) 100%);
+    color: #fff;
+    font-size: 17px;
+    font-weight: 700;
+    line-height: 1;
+    text-transform: uppercase;
+    box-shadow: 0 4px 12px var(--ico-shadow, rgba(3, 114, 255, 0.28));
+    transition: transform 0.18s ease, box-shadow 0.18s ease;
   }
-  .folder-ico svg { width: 20px; height: 20px; }
-  .folder-card.is-selected .folder-ico { background: var(--accent-gradient); color: #fff; }
+  .folder-ico svg { width: 21px; height: 21px; }
+  .folder-card:hover .folder-ico { transform: scale(1.06); }
+  .folder-card.is-selected .folder-ico { transform: scale(1.06); }
 
   .folder-name {
     flex: 1;
@@ -969,6 +979,57 @@
   // Returns what the user should see for a given real folder name.
   function labelFor(name) { return FOLDER_LABELS[name] || name; }
 
+  // ----- Per-folder icon visuals -----
+  // Each folder is shown as its own colorful "app-icon" tile — a gradient square
+  // with the first letter of its name — instead of an identical folder glyph.
+  // The color is chosen deterministically from the real folder name, so a given
+  // folder always keeps the same look and the list is instantly scannable.
+  const FOLDER_PALETTE = [
+    { c1: "#0372FF", c2: "#31D1FF" }, // blue
+    { c1: "#7C3AED", c2: "#A855F7" }, // violet
+    { c1: "#EC4899", c2: "#F472B6" }, // pink
+    { c1: "#F43F5E", c2: "#FB7185" }, // rose
+    { c1: "#F97316", c2: "#FB923C" }, // orange
+    { c1: "#16A34A", c2: "#4ADE80" }, // green
+    { c1: "#0D9488", c2: "#2DD4BF" }, // teal
+    { c1: "#0891B2", c2: "#22D3EE" }, // cyan
+    { c1: "#4F46E5", c2: "#6366F1" }, // indigo
+    { c1: "#C026D3", c2: "#E879F9" }, // fuchsia
+    { c1: "#EAB308", c2: "#FACC15" }, // gold
+    { c1: "#0284C7", c2: "#38BDF8" }, // sky
+  ];
+
+  // Stable 32-bit string hash so a folder always maps to the same palette entry.
+  function hashString(str) {
+    let h = 0;
+    for (let i = 0; i < str.length; i++) {
+      h = (h << 5) - h + str.charCodeAt(i);
+      h |= 0;
+    }
+    return Math.abs(h);
+  }
+
+  // #rrggbb -> rgba() string, used for each tile's soft colored glow.
+  function hexToRgba(hex, alpha) {
+    const n = parseInt(hex.slice(1), 16);
+    return "rgba(" + ((n >> 16) & 255) + ", " + ((n >> 8) & 255) + ", " + (n & 255) + ", " + alpha + ")";
+  }
+
+  // Resolve the gradient colors + monogram letter for a folder's icon tile.
+  function folderVisual(name) {
+    const pal = FOLDER_PALETTE[hashString(name) % FOLDER_PALETTE.length];
+    const match = labelFor(name).match(/[a-z0-9]/i);
+    return {
+      c1: pal.c1,
+      c2: pal.c2,
+      shadow: hexToRgba(pal.c1, 0.32),
+      letter: match ? match[0].toUpperCase() : "",
+    };
+  }
+
+  // Generic folder glyph — a fallback for names with no letter/number to show.
+  const FOLDER_GLYPH = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>';
+
   // ----- State -----
   let defaultBranch = null;
   let selectedFolder = null;
@@ -1062,8 +1123,11 @@
       card.type = "button";
       card.className = "folder-card";
       card.dataset.folder = name;
+      // Give this folder its own colored monogram tile (letter is safe: [a-z0-9]).
+      const v = folderVisual(name);
+      const icoStyle = "--ico-c1:" + v.c1 + ";--ico-c2:" + v.c2 + ";--ico-shadow:" + v.shadow;
       card.innerHTML =
-        '<span class="folder-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg></span>' +
+        '<span class="folder-ico" style="' + icoStyle + '">' + (v.letter || FOLDER_GLYPH) + '</span>' +
         '<span class="folder-name"></span>' +
         '<span class="radio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg></span>';
       // Show the friendly label; the real folder name stays in dataset.folder.
